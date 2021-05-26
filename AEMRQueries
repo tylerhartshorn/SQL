@@ -1,0 +1,197 @@
+#Section 1
+#1.1
+SELECT 
+  COUNT(*) AS Total_Number_Outage_Events,
+  Status, Reason
+  FROM AEMR
+  WHERE Status = 'Approved'
+  AND Year(Start_Time) IN ('2016')
+GROUP BY Status, Reason
+ORDER BY Reason;
+ 
+#1.2
+SELECT 
+  COUNT(*) AS Total_Number_Outage_Events,
+  Status, Reason
+FROM AEMR
+  WHERE Status = 'Approved'
+  AND Year(Start_Time) IN ('2017')
+GROUP BY Status, Reason
+ORDER BY Reason;
+
+select status, reason, 
+COUNT(*) as Total_Number_Outage_Events
+FROM AEMR
+WHERE Status = 'Approved'
+AND
+Year(Start_Time) = 2016
+GROUP BY status, reason
+ORDER BY status, reason ASC;
+
+#1.3
+select status, reason, 
+COUNT(*) as Total_Number_Outage_Events,
+ROUND(AVG(TIMESTAMPDIFF(minute, start_time, end_time)/60/24),2) AS Avg_Duration_Outage_Time,
+Year(Start_Time) AS Year
+FROM AEMR
+WHERE Status = 'Approved'
+AND
+Year(Start_Time) = 2016
+OR
+Year(Start_Time) = 2017
+GROUP BY status reason, year
+ORDER BY reason, year;
+
+#1.5
+ 
+SELECT 
+  Status, Reason,
+  COUNT(*) AS Total_Number_Outage_Events,
+  ROUND(AVG(TIMESTAMPDIFF(minute, start_time, end_time)/60/24),2) AS Average_Outage_Duration_Time_Days,
+  Year(Start_Time) As Year
+FROM AEMR
+  WHERE Status = 'Approved'
+  AND Year(Start_Time) IN ('2016','2017')
+GROUP BY Status, Reason, Year
+ORDER BY Reason, Year;
+
+#2.1
+select 
+Status, Reason,
+COUNT(*) as Total_Number_Outage_Events,
+Month(Start_Time) AS Month
+FROM AEMR
+WHERE Status = 'Approved'
+AND Year(Start_Time) IN ('2016')
+GROUP BY Status, Reason, Month
+ORDER BY Month;
+
+
+#2.2
+select 
+Status, Reason,
+COUNT(*) as Total_Number_Outage_Events,
+Month(Start_Time) AS Month
+FROM AEMR
+WHERE Status = 'Approved'
+AND Year(Start_Time) IN ('2017')
+GROUP BY Status, Reason, Month
+ORDER BY Reason, Month;
+
+#2.3
+select 
+Status,
+COUNT(*) as Total_Number_Outage_Events,
+Month(Start_Time) AS Month,
+Year(Start_Time) as Year
+FROM AEMR
+WHERE Status = 'Approved'
+AND Year(Start_Time) IN ('2016', '2017')
+GROUP BY Status, Month, Year
+ORDER BY Month, Year;
+ 
+
+#3.1
+select 
+COUNT(*) as Total_Number_Outage_Events,
+Participant_Code, Status,
+Year(Start_Time) as Year
+FROM AEMR
+WHERE Status = 'Approved'
+AND Year(Start_Time) IN ('2016', '2017')
+GROUP BY Status, Year, Participant_Code
+ORDER BY Year, Participant_Code;
+
+#3.2
+
+select 
+Participant_Code, Status,
+Year(Start_Time) as Year,
+ROUND(AVG(TIMESTAMPDIFF(minute, start_time, end_time)/60/24),2) AS Average_Outage_Duration_Time_Days
+FROM AEMR
+WHERE Status = 'Approved'
+AND Year(Start_Time) IN ('2016', '2017')
+GROUP BY Status, Year, Participant_Code
+ORDER BY Year, Participant_Code DESC;
+
+
+#Part 2:
+
+#1.1
+select 
+  Count(*) AS Total_Number_Outage_Events,
+  Reason,
+  Year(Start_Time) AS Year
+FROM AEMR
+  WHERE Status = 'Approved'
+  AND Year(Start_Time) IN ('2016', '2017')
+  AND Reason = 'Forced'
+GROUP BY Reason, Year
+ORDER BY Reason, Year;
+
+#1.2
+
+select 
+  SUM(CASE
+      WHEN Reason = "Forced" Then 1
+      Else 0 END) AS Total_Number_Forced_Outage_Events,
+  Count(*) AS Total_Number_Outage_Events,
+  ROUND(((SUM(CASE WHEN Reason = 'Forced' THEN 1 ELSE 0 END)/Count(*))*100),2) as Forced_Outage_Percentage,
+  Year(Start_Time) AS Year
+FROM AEMR
+  WHERE Status = 'Approved'
+  AND Year(Start_Time) IN ('2016', '2017')
+GROUP BY Year
+ORDER BY Year;
+
+#2.1
+
+SELECT 
+  Status,
+  YEAR(Start_Time) AS Year,
+ROUND(AVG(Outage_MW),2) AS Avg_Outage_MW_Loss,
+ROUND(AVG(TIMESTAMPDIFF(MINUTE, Start_Time, End_Time)),2)Average_Outage_Duration_Time_Minutes
+FROM AEMR
+  WHERE Status = 'Approved' AND Reason = 'Forced'
+  AND Year(Start_Time) IN ('2016', '2017')
+GROUP BY Status, Year
+ORDER BY Year;
+
+#2.2
+
+SELECT 
+  Status, Reason,
+  YEAR(Start_Time) AS Year,
+ROUND(AVG(Outage_MW),2) AS Avg_Outage_MW_Loss,
+ROUND(AVG(TIMESTAMPDIFF(MINUTE, Start_Time, End_Time)),2)Average_Outage_Duration_Time_Minutes
+FROM AEMR
+  WHERE Status = 'Approved'
+  AND Year(Start_Time) IN ('2016', '2017')
+GROUP BY Reason, Year
+ORDER BY Year;
+
+
+#3.1
+SELECT 
+  Participant_Code, Status,
+  YEAR(Start_Time) AS Year,
+ROUND(AVG(Outage_MW),2) AS Avg_Outage_MW_Loss,
+ROUND(AVG(TIMESTAMPDIFF(MINUTE, Start_Time, End_Time)/60/24),2)Average_Outage_Duration_Time_Days
+FROM AEMR
+  WHERE Status = 'Approved' AND Reason = 'Forced'
+  AND Year(Start_Time) IN ('2016', '2017')
+GROUP BY Participant_Code, Year
+ORDER BY Avg_Outage_MW_Loss DESC;
+
+#3.2
+SELECT 
+  Participant_Code, Facility_Code, Status,
+  YEAR(Start_Time) AS Year,
+ROUND(AVG(Outage_MW),2) AS Avg_Outage_MW_Loss,
+ROUND(SUM(Outage_MW),2) AS Summed_Energy_Lost
+FROM AEMR
+  WHERE Status = 'Approved' AND Reason = 'Forced'
+  AND Year(Start_Time) IN ('2016', '2017')
+GROUP BY Participant_Code, Facility_Code, Year
+ORDER BY Year, Summed_Energy_Lost DESC;
+
