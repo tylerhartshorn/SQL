@@ -16,10 +16,9 @@
 #1
 
 SELECT
-	DISTINCT COUNT(sales.product_id) as num_orders,
-    sales.product_id,
-    customer_id
-   	FROM sales
-    JOIN menu on menu.product_id=sales.product_id
- GROUP BY customer_id, sales.product_id
- ORDER BY customer_id;
+	customer_id,
+  	(menu.product_id * menu.price) as total
+    FROM sales
+    LEFT JOIN menu on menu.product_id=sales.product_id
+    GROUP BY customer_id, menu.product_id, menu.price
+    ORDER BY customer_id ASC;
