@@ -22,3 +22,64 @@ SELECT
     LEFT JOIN menu on menu.product_id=sales.product_id
     GROUP BY customer_id, menu.product_id, menu.price
     ORDER BY customer_id ASC;
+    
+ #2
+ 
+ SELECT
+    customer_id,
+    order_date,
+    COUNT (order_date) as visits
+FROM sales
+GROUP BY customer_id, order_date
+ORDER BY customer_id;
+
+#3
+SELECT
+    customer_id,
+    order_date,
+    product_name
+    FROM sales as s
+LEFT JOIN menu as m ON s.product_id = m.product_id
+GROUP BY s.customer_id, s.order_date, s.product_id, m.product_name
+ORDER BY s.order_date ASC;
+
+#4
+
+SELECT
+    s.product_id,
+    COUNT(s.product_id),
+    m.product_name
+FROM sales as s
+LEFT JOIN menu as m ON s.product_id = m.product_id 
+GROUP BY s.product_id, m.product_name
+ORDER BY count DESC;
+
+#5
+
+SELECT
+    s.customer_id,
+    s.product_id,
+    COUNT(s.product_id),
+    m.product_name
+FROM sales as s
+LEFT JOIN menu as m ON s.product_id = m.product_id 
+GROUP BY s.product_id, m.product_name, s.customer_id
+ORDER BY count DESC;
+
+#6
+
+SELECT
+    mem.customer_id,
+    s.product_id,
+    s.order_date,
+    m.product_name
+FROM members as mem
+LEFT JOIN sales as s ON mem.customer_id = s.customer_id
+RIGHT JOIN menu as m on s.product_id = m.product_id
+WHERE s.order_date >= '2021-01-07' 
+GROUP BY mem.customer_id, s.order_date, m.product_name, s.product_id
+ORDER BY s.order_date ASC;	
+
+#7
+
+
