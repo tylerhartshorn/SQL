@@ -96,4 +96,16 @@ ORDER BY s.order_date DESC;
 
 #8
 
+SELECT
+	mem.customer_id,
+    (count(s.product_id) * m.price) * 10 as points,
+    count(s.product_id) as count,
+    m.product_name
+FROM members as mem
+LEFT JOIN sales as s ON mem.customer_id = s.customer_id
+RIGHT JOIN menu as m on s.product_id = m.product_id
+GROUP BY mem.customer_id, s.order_date, m.product_name, s.product_id, m.price
+ORDER BY customer_id ASC;
+
+
 
