@@ -75,7 +75,7 @@ SELECT
     m.product_name
 FROM members as mem
 LEFT JOIN sales as s ON mem.customer_id = s.customer_id
-RIGHT JOIN menu as m on s.product_id = m.product_id
+LEFT JOIN menu as m on s.product_id = m.product_id
 WHERE s.order_date >= '2021-01-07' 
 GROUP BY mem.customer_id, s.order_date, m.product_name, s.product_id
 ORDER BY s.order_date ASC;	
@@ -89,7 +89,7 @@ SELECT
     m.product_name
 FROM members as mem
 LEFT JOIN sales as s ON mem.customer_id = s.customer_id
-RIGHT JOIN menu as m on s.product_id = m.product_id
+LEFT JOIN menu as m on s.product_id = m.product_id
 WHERE s.order_date < '2021-01-07' 
 GROUP BY mem.customer_id, s.order_date, m.product_name, s.product_id
 ORDER BY s.order_date DESC;	
