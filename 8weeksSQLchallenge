@@ -15,106 +15,262 @@
 
 #1
 
-SELECT
-	customer_id,
-  	(menu.product_id * menu.price) as total
-    FROM sales
-    LEFT JOIN menu on menu.product_id=sales.product_id
-    GROUP BY customer_id, menu.product_id, menu.price
-    ORDER BY customer_id ASC;
+SELECT 
+	sales.customer_id,
+  SUM(menu.price) AS total_spent
+FROM dannys_diner.sales
+JOIN dannys_diner.menu
+	ON sales.product_id = menu.product_id
+GROUP BY customer_id
+ORDER BY customer_id;
     
  #2
  
- SELECT
-    customer_id,
-    order_date,
-    COUNT (order_date) as visits
-FROM sales
-GROUP BY customer_id, order_date
-ORDER BY customer_id;
+SELECT
+  customer_id,
+  COUNT (DISTINCT order_date) AS visited_days
+FROM dannys_diner.sales
+GROUP BY customer_id;
 
 #3
-SELECT
-    customer_id,
-    order_date,
-    product_name
-    FROM sales as s
-LEFT JOIN menu as m ON s.product_id = m.product_id
-GROUP BY s.customer_id, s.order_date, s.product_id, m.product_name
-ORDER BY s.order_date ASC;
+
+WITH cte_order AS (
+  SELECT
+    sales.customer_id,
+    menu.product_name,
+    ROW_NUMBER() OVER(
+     PARTITION BY sales.customer_id
+      ORDER BY 
+        sales.order_date,  
+        sales.product_id
+    ) AS item_order
+    FROM dannys_diner.sales
+    JOIN dannys_diner.menu
+    ON sales.product_id = menu.product_id
+)
+SELECT * FROM cte_order
+WHERE item_order = 1;
 
 #4
 
 SELECT
-    s.product_id,
-    COUNT(s.product_id),
-    m.product_name
-FROM sales as s
-LEFT JOIN menu as m ON s.product_id = m.product_id 
-GROUP BY s.product_id, m.product_name
-ORDER BY count DESC;
+  menu.product_name,
+  COUNT(sales.product_id) AS order_count
+FROM dannys_diner.sales
+INNER JOIN dannys_diner.menu
+  ON sales.product_id = menu.product_id
+GROUP BY
+  menu.product_name
+ORDER BY order_count DESC
+LIMIT 1;
 
 #5
 
+WITH cte_order_count AS (
+  SELECT
+    sales.customer_id,
+    menu.product_name,
+    COUNT(*) as order_count
+  FROM dannys_diner.sales
+  JOIN dannys_diner.menu
+    ON sales.product_id = menu.product_id
+  GROUP BY 
+    customer_id,
+    product_name
+  ORDER BY
+    customer_id,
+    order_count DESC
+),
+cte_popular_rank AS (
+  SELECT 
+    *,
+    RANK() OVER(PARTITION BY customer_id ORDER BY order_count DESC) AS rank
+  FROM cte_order_count
+)
+SELECT * FROM cte_popular_rank
+WHERE rank = 1;
+
+--Prereq for 6-10
+
+DROP TABLE IF EXISTS membership_validation;
+CREATE TEMP TABLE membership_validation AS
 SELECT
-    s.customer_id,
-    s.product_id,
-    COUNT(s.product_id),
-    m.product_name
-FROM sales as s
-LEFT JOIN menu as m ON s.product_id = m.product_id 
-GROUP BY s.product_id, m.product_name, s.customer_id
-ORDER BY count DESC;
+   sales.customer_id,
+   sales.order_date,
+   menu.product_name,
+   menu.price,
+   members.join_date,
+   CASE WHEN sales.order_date >= members.join_date
+     THEN 'X'
+     ELSE ''
+     END AS membership
+FROM dannys_diner.sales
+ INNER JOIN dannys_diner.menu
+   ON sales.product_id = menu.product_id
+ LEFT JOIN dannys_diner.members
+   ON sales.customer_id = members.customer_id
+-- using the WHERE clause on the join_date column to exclude customers who haven't joined the membership program (don't have a join date = not joining the program)
+  WHERE join_date IS NOT NULL
+  ORDER BY 
+    customer_id,
+    order_date;
 
 #6
 
-SELECT
-    mem.customer_id,
-    s.product_id,
-    s.order_date,
-    m.product_name
-FROM members as mem
-LEFT JOIN sales as s ON mem.customer_id = s.customer_id
-LEFT JOIN menu as m on s.product_id = m.product_id
-WHERE s.order_date >= '2021-01-07' 
-GROUP BY mem.customer_id, s.order_date, m.product_name, s.product_id
-ORDER BY s.order_date ASC;	
+WITH cte_first_after_mem AS (
+  SELECT 
+    customer_id,
+    product_name,
+  	order_date,
+    RANK() OVER(
+    PARTITION BY customer_id
+    ORDER BY order_date) AS purchase_order
+  FROM membership_validation
+  WHERE membership = 'X'
+)
+SELECT * FROM cte_first_after_mem
+WHERE purchase_order = 1;
 
 #7
 
-SELECT
-	mem.customer_id,
-    s.product_id,
-    s.order_date,
-    m.product_name
-FROM members as mem
-LEFT JOIN sales as s ON mem.customer_id = s.customer_id
-LEFT JOIN menu as m on s.product_id = m.product_id
-WHERE s.order_date < '2021-01-07' 
-GROUP BY mem.customer_id, s.order_date, m.product_name, s.product_id
-ORDER BY s.order_date DESC;	
+WITH cte_last_before_mem AS (
+  SELECT 
+    customer_id,
+    product_name,
+  	order_date,
+    RANK() OVER(
+    PARTITION BY customer_id
+    ORDER BY order_date DESC) AS purchase_order
+  FROM membership_validation
+  WHERE membership = ''
+)
+SELECT * FROM cte_last_before_mem
+--since we used the ORDER BY DESC in the query above, the order 1 would mean the last date before the customer join in the membership
+WHERE purchase_order = 1;
 
 #8
 
-DROP TABLE IF EXISTS total_counts;
-CREATE TEMP TABLE total_counts AS
-SELECT
-	mem.customer_id,
-    (count(s.product_id) * m.price) * 10 as points,
-    count(s.product_id) as count,
-    m.product_name
-FROM members as mem
-INNER JOIN sales as s ON mem.customer_id = s.customer_id
-INNER JOIN menu as m on s.product_id = m.product_id
-GROUP BY mem.customer_id, s.order_date, m.product_name, s.product_id, m.price;
-
-SELECT
+WITH cte_spent_before_mem AS (
+  SELECT 
+    customer_id,
+    product_name,
+    price
+  FROM membership_validation
+  WHERE membership = ''
+)
+SELECT 
 	customer_id,
-	SUM(points),
-    product_name
-FROM total_counts
-GROUP BY customer_id, product_name
-ORDER BY customer_id ASC;
+  SUM(price) AS total_spent,
+  COUNT(*) AS total_items
+FROM cte_spent_before_mem
+GROUP BY customer_id
+ORDER BY customer_id;
 
+#9
 
+SELECT
+  customer_id,
+  SUM(
+  CASE WHEN product_name = 'sushi'
+  THEN (price * 20)
+  ELSE (price * 10)
+  END
+  ) AS total_points
+FROM membership_validation
+GROUP BY customer_id
+ORDER BY customer_id;
 
+#10
+
+--Part 1
+--create temp table for days validation within the first week membership
+DROP TABLE IF EXISTS membership_first_week_validation;
+CREATE TEMP TABLE membership_first_week_validation AS 
+WITH cte_valid AS (
+SELECT
+  customer_id,
+  order_date,
+  product_name,
+  price,
+  /* since we use aggregate function for our condition clause, the query will require to have the GROUP BY clause which also include the order_date and product_name. 
+  
+  This can possibly combine those orders with same product name in the same date into 1, which can lead to errors in our final sum calculation. 
+  
+  Thus, I will count all the order_count group by order_date to avoid these mistakes */
+  COUNT(*) AS order_count,
+  CASE WHEN order_date BETWEEN join_date AND (join_date + 6)
+  THEN 'X'
+  ELSE ''
+  END AS within_first_week
+FROM membership_validation
+GROUP BY 
+	customer_id,
+  order_date,
+  product_name,
+  price,
+  join_date
+ ORDER BY
+ 	customer_id,
+  order_date
+)
+SELECT * FROM cte_valid
+--Since we only calculate total points of customers by the end of January, I set the order_date condition < '2021-02-01' to avoid all the unecessary sum orders calculation after January
+WHERE order_date < '2021-02-01';
+--inspect the table result
+SELECT * FROM membership_first_week_validation;
+
+--Part 2
+--create temp table for points calculation only in the first week of membership
+DROP TABLE IF EXISTS membership_first_week_points;
+CREATE TEMP TABLE membership_first_week_points AS 
+WITH cte_first_week_count AS (
+  SELECT * FROM membership_first_week_validation
+  WHERE within_first_week = 'X'
+)
+SELECT
+  customer_id,
+  SUM(
+  CASE WHEN within_first_week = 'X'
+  THEN (price * order_count * 20)
+  ELSE (price * order_count * 10)
+  END
+  ) AS total_points
+FROM cte_first_week_count
+GROUP BY customer_id;
+--inspect table results
+SELECT * FROM membership_first_week_points;
+
+--create temp table for points calculation excluded the first week membership (before membership + after the first week membership)
+DROP TABLE IF EXISTS membership_non_first_week_points;
+CREATE TEMP TABLE membership_non_first_week_points AS 
+WITH cte_first_week_count AS (
+  SELECT * FROM membership_first_week_validation
+  WHERE within_first_week = ''
+)
+SELECT
+  customer_id,
+  SUM(
+  CASE WHEN product_name = 'sushi'
+  THEN (price * order_count * 20)
+  ELSE (price * order_count * 10)
+  END
+  ) AS total_points
+FROM cte_first_week_count
+GROUP BY customer_id;
+--inspect table results
+SELECT * FROM membership_non_first_week_points;
+
+--Step 3
+
+--perform table union to aggregate our point values from both point calculation tables, then use SUM aggregate function to get our result
+WITH cte_union AS (
+  SELECT * FROM membership_first_week_points
+  UNION
+  SELECT * FROM membership_non_first_week_points
+)
+SELECT
+  customer_id,
+  SUM(total_points)
+FROM cte_union
+GROUP BY customer_id
+ORDER BY customer_id;
