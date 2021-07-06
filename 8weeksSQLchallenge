@@ -44,8 +44,8 @@ WITH cte_order AS (
         sales.order_date,  
         sales.product_id
     ) AS item_order
-    FROM dannys_diner.sales
-    JOIN dannys_diner.menu
+    FROM sales
+    JOIN menu
     ON sales.product_id = menu.product_id
 )
 SELECT * FROM cte_order
