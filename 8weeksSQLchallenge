@@ -104,10 +104,10 @@ SELECT
      THEN 'X'
      ELSE ''
      END AS membership
-FROM dannys_diner.sales
- INNER JOIN dannys_diner.menu
+FROM sales
+ INNER JOIN menu
    ON sales.product_id = menu.product_id
- LEFT JOIN dannys_diner.members
+ LEFT JOIN members
    ON sales.customer_id = members.customer_id
 -- using the WHERE clause on the join_date column to exclude customers who haven't joined the membership program (don't have a join date = not joining the program)
   WHERE join_date IS NOT NULL
