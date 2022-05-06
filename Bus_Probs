@@ -9,3 +9,14 @@ GROUP BY table_name;
 -- Query the newly created view table_columns
 SELECT *
 FROM table_columns;
+
+-- Calculate the average_length for each category
+SELECT category, 
+	   AVG(length) AS average_length
+FROM film AS f
+-- Join the tables film & category
+INNER JOIN category AS c
+  ON f.film_id = c.film_id
+GROUP BY category
+-- Sort the results in ascending order by length
+ORDER BY average_length ASC;
