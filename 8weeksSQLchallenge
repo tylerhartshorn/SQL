@@ -27,10 +27,10 @@ ORDER by total_spent DESC;;
  #2
  
 SELECT
-  customer_id,
-  COUNT (DISTINCT order_date) AS visited_days
-FROM sales
-GROUP BY customer_id;
+    sales.customer_id,
+    COUNT(DISTINCT sales.order_date) as days_visited
+FROM dannys_diner.sales
+GROUP BY sales.customer_id;;
 
 #3
 
@@ -50,6 +50,15 @@ WITH cte_order AS (
 )
 SELECT * FROM cte_order
 WHERE item_order = 1;
+
+SELECT
+    sales.customer_id,
+    sales.order_date,
+    menu.product_name
+    FROM dannys_diner.sales
+    JOIN dannys_diner.menu
+    ON menu.product_id = sales.product_id
+    ORDER BY sales.order_date ASC;
 
 #4
 
