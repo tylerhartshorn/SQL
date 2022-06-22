@@ -118,6 +118,14 @@ cte_popular_rank AS (
 SELECT * FROM cte_popular_rank
 WHERE rank = 1;
 
+SELECT
+sales.customer_id as customer, COUNT(sales.product_id) as orders, menu.product_name as dish
+FROM dannys_diner.sales
+LEFT JOIN dannys_diner.menu
+ON menu.product_id = sales.product_id
+GROUP BY customer, dish
+ORDER BY orders DESC;
+
 --Prereq for 6-10
 
 DROP TABLE IF EXISTS membership_validation;
