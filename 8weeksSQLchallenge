@@ -153,6 +153,18 @@ FROM sales
 
 #6
 
+SELECT
+members.customer_id as customer, sales.product_id as product, menu.product_name as dish 
+FROM dannys_diner.members
+LEFT JOIN dannys_diner.sales
+ON sales.customer_id = members.customer_id
+LEFT JOIN dannys_diner.menu
+ON menu.product_id = sales.product_id
+WHERE members.join_date <= sales.order_date
+--Assuming they became member before ordering
+GROUP BY product, customer, dish
+LIMIT 2;
+
 WITH cte_first_after_mem AS (
   SELECT 
     customer_id,
