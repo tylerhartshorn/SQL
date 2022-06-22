@@ -209,6 +209,17 @@ WHERE purchase_order = 1;
 
 #8
 
+SELECT
+SUM(number * price) as bill, customer, COUNT(number) as num_orders
+FROM
+(SELECT
+sales.customer_id as customer, COUNT(sales.product_id) as number, menu.product_name as dish, menu.price as price
+FROM dannys_diner.sales
+LEFT JOIN dannys_diner.menu
+ON menu.product_id = sales.product_id
+GROUP BY customer, dish, price) as orders
+GROUP BY customer;
+
 WITH cte_spent_before_mem AS (
   SELECT 
     customer_id,
