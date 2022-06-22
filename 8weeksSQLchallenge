@@ -84,6 +84,14 @@ GROUP BY
 ORDER BY order_count DESC
 LIMIT 1;
 
+SELECT
+COUNT(sales.product_id) as orders, menu.product_name as dish
+FROM dannys_diner.sales
+LEFT JOIN dannys_diner.menu
+ON menu.product_id = sales.product_id
+GROUP BY dish
+ORDER BY orders DESC;
+
 #5
 
 WITH cte_order_count AS (
