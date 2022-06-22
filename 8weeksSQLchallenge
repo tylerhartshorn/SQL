@@ -213,10 +213,13 @@ SELECT
 SUM(number * price) as bill, customer, COUNT(number) as num_orders
 FROM
 (SELECT
-sales.customer_id as customer, COUNT(sales.product_id) as number, menu.product_name as dish, menu.price as price
-FROM dannys_diner.sales
+members.customer_id as customer, COUNT(sales.product_id) as number, menu.product_name as dish, menu.price as price
+FROM dannys_diner.members
+LEFT JOIN dannys_diner.sales
+ON sales.customer_id = members.customer_id
 LEFT JOIN dannys_diner.menu
 ON menu.product_id = sales.product_id
+WHERE members.join_date > sales.order_date
 GROUP BY customer, dish, price) as orders
 GROUP BY customer;
 
