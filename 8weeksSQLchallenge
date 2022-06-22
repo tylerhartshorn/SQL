@@ -210,7 +210,7 @@ WHERE purchase_order = 1;
 #8
 
 SELECT
-SUM(number * price) as bill, customer, COUNT(number) as num_orders
+SUM(number * price) as bill, customer, SUM(number) as num_orders
 FROM
 (SELECT
 members.customer_id as customer, COUNT(sales.product_id) as number, menu.product_name as dish, menu.price as price
