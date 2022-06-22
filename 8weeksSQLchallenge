@@ -59,6 +59,17 @@ SELECT
     JOIN dannys_diner.menu
     ON menu.product_id = sales.product_id
     ORDER BY sales.order_date ASC;
+    
+SELECT
+customer, day, dish
+FROM
+(SELECT
+	sales.customer_id as customer, sales.order_date as day, menu.product_name as dish
+FROM dannys_diner.sales
+LEFT JOIN dannys_diner.menu
+ON menu.product_id = sales.product_id
+GROUP BY customer, day, dish) AS sub
+ORDER BY day ASC;
 
 #4
 
